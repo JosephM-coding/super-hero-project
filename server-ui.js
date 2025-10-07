@@ -8,6 +8,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 const PORT = 4000;
+
 // read, write functions
 const readUsers = () => {
     try {
@@ -16,7 +17,17 @@ const readUsers = () => {
       console.log('no users file found, initializing empty array');
       return [];
      }
+}
+
+const writeUsers = (users) => {
+    const dataDir = path.dirname(userDBfilePath);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true })
+    }
+    //write file code
+    fs.writeFileSync(userDBfilePath, JSON.stringify(users, null, 2));
   }
+
 // --- routes ----
 // ---- GET ----
 app.get("/", async (req, res) => {
