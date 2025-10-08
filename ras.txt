@@ -1,1 +1,12 @@
 Hi, from ras!
+ras
+app.get("/", async (req, res) => {
+  try {
+    const data = await fs.readFile(heroUIDBpath, "utf-8");
+    const heroes = await JSON.parse(data);
+    res.render("heroList.ejs", { heroes });
+  } catch (error) {
+    console.error("error reading console", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});

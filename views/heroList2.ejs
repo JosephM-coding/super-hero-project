@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Superhero Database</title>
+    <link href="/css/styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div>
+      <h1>Superhero Database</h1>
+      <% if (heroes && heroes.length > 0) { %>
+      <div>
+        <% heroes.forEach(function(hero) { %>
+        <div id="hero-<%= hero.id %>">
+          <div>
+            <div>
+              <!-- Display Mode -->
+              <div id="display-<%= hero.id %>">
+                <h5><%= hero.superName %></h5>
+                <p>
+                  <strong>Real Name:</strong> <%= hero.realName %><br />
+                  <strong>Power:</strong> <%= hero.superpower %><br />
+                  <strong>Level:</strong>
+                  <span><%= hero.powerLevel %>/10</span><br />
+                  <strong>Secret Identity:</strong>
+                  <% if (hero.secretIdentity) { %>
+                  <i></i> Yes <% } else { %> <i></i> No <% } %>
+                </p>
+                <div>
+                  <button onclick="editHero('<%= hero.id %>')">Edit</button>
+                  <button onclick="deleteHero('<%= hero.id %>')">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } else { %>
+      <div>No heroes found. Add your first superhero!</div>
+      <% } %>
+      <div>
+        <a href="/form"> Add New Hero </a>
+      </div>
+    </div>
+  </body>
+</html>
