@@ -1,42 +1,123 @@
-require('dotenv').config();
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const heroDBpath = path.join(__dirname, 'data', 'db-heros.json');
+const express = require("express");
+const fs = require("fs").promises;
+const path = require("path");
+const { MongoClient } = require("mongodb");
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(express.static('public'));
-app.set('view engine', 'ejs');
+require("dotenv").config();
 const PORT = 3000;
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.set("view engine", "ejs");
+
+const DATA_FILE = path.join(__dirname, "data", "db-heros.json");
+
+// Helper function to read heroes
 async function readHeroes() {
   try {
-    const data = await fs.readFile(heroDBpath, "utf-8");
+    const data = await fs.readFile(DATA_FILE, "utf8");
     return JSON.parse(data);
   } catch (error) {
-    return []; // return empty array
+    return []; // Return empty array if file doesn't exist
   }
 }
-
+// Helper function to write heroes
 async function writeHeroes(heroes) {
-  try {
-    await fs.writeFile(heroDBpath, JSON.stringify(heroes, null, 2));
-  } catch (error) {
-    console.error("problem writing to file", error);
-  }
+  await fs.writeFile(DATA_FILE, JSON.stringify(heroes, null, 2));
 }
-async function initializeDatabase() {
+// Initialize empty heroes file
+async function initializeDataFile() {
   try {
-    await fs.access(heroDBpath);
-  } catch (error) {
+    await fs.access(DATA_FILE);
+  } catch {
     await writeHeroes([]);
   }
 }
-initializeDatabase();
-// --- routes ----
-// ---- post ----
-app.post("/heroes", (req, res) => {});
+initializeDataFile();
+
+app.post("/heroes", async (req, res) => {
+  try {
+    const heroes = await readHeroes();
+    const newHero = {
+      id: Date.now().toString(),
+      superName: req.body.superName,
+      realName: req.body.realName,
+      superpower: req.body.superpower,
+      powerLevel: parseInt(req.body.powerLevel),
+      secretIdentity: req.body.secretIdentity === "true",
+      createdAt: new Date().toISOString(),
+    };
+    heroes.push(newHero);
+    await writeHeroes(heroes);
+    res.status(201).json({
+      success: true,
+      message: "Hero created successfully!",
+      redirectTo: "/heroes",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/heroes", async (req, res) => {
+  try {
+    const heroes = await readHeroes();
+    if (req.accepts("html")) {
+      res.render("heroList", { heroes });
+    } else {
+      res.json({ success: true, count: heroes.length, data: heroes });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put("/heroes/:id", async (req, res) => {
+  try {
+    const heroes = await readHeroes();
+    const heroIndex = heroes.findIndex((h) => h.id === req.params.id);
+    if (heroIndex === -1) {
+      return res.status(404).json({ success: false, error: "Hero not found" });
+    }
+    heroes[heroIndex] = {
+      ...heroes[heroIndex],
+      superName: req.body.superName,
+      realName: req.body.realName,
+      superpower: req.body.superpower,
+      powerLevel: parseInt(req.body.powerLevel),
+      secretIdentity: req.body.secretIdentity === "true",
+      updatedAt: new Date().toISOString(),
+    };
+    await writeHeroes(heroes);
+    res.json({ success: true, data: heroes[heroIndex] });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete("/heroes/:id", async (req, res) => {
+  try {
+    const heroes = await readHeroes();
+    const filteredHeroes = heroes.filter((h) => h.id !== req.params.id);
+    if (heroes.length === filteredHeroes.length) {
+      return res.status(404).json({ success: false, error: "Hero not found" });
+    }
+    await writeHeroes(filteredHeroes);
+    res.json({ success: true, message: "Hero deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/", async (req, res) => {
+  //   const heroFields = require("./config/heroInputs.config.js");
+  const heroes = await readHeroes();
+  console.log(heroes);
+  res.json({ heroes });
+  //   res.render("heroForm", heroFields);
+});
+
 app.listen(PORT, () => {
-  console.log(`App is listening on PORT`);
+  console.log("App is listening on 3000");
 });
