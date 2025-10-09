@@ -1,16 +1,3 @@
-Conversation opened. 1 unread message.
-
-Skip to content
-Using West-MEC Mail with screen readers
-
-2 of 599
-here is the validation ive done
-Inbox
-
-Jassiel Vera
-Wed, Oct 8, 2:30 PM (21 hours ago)
-to me
-
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("hero-form");
   if (!form) return;
