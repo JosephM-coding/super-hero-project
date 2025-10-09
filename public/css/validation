@@ -1,0 +1,91 @@
+Conversation opened. 1 unread message.
+
+Skip to content
+Using West-MEC Mail with screen readers
+
+2 of 599
+here is the validation ive done
+Inbox
+
+Jassiel Vera
+Wed, Oct 8, 2:30 PM (21 hours ago)
+to me
+
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("hero-form");
+  if (!form) return;
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    document.querySelectorAll(".error-message").forEach((el) => el.remove());
+
+    const superName = document.getElementById("superName").value.trim();
+    const realName = document.getElementById("realName").value.trim();
+    const superpower = document.getElementById("superpower").value.trim();
+    const powerLevel = document.getElementById("powerLevel").value.trim();
+    const secretIdentity = document.getElementById("secretIdentity").checked;
+
+    let isValid = true;
+
+    const showError = (fieldId, message) => {
+      isValid = false;
+      const input = document.getElementById(fieldId);
+      input.classList.add("is-invalid");
+
+      const error = document.createElement("div");
+      error.className = "text-danger small error-message mt-1";
+      error.textContent = message;
+      input.parentNode.appendChild(error);
+    };
+
+    if (superName.length < 2)
+      showError("superName", "Super name must be at least 2 characters.");
+    if (realName.length < 2)
+      showError("realName", "Real name must be at least 2 characters.");
+    if (superpower.length < 3)
+      showError("superpower", "Superpower must be at least 3 characters.");
+
+    const powerNum = parseInt(powerLevel);
+    if (!powerNum || powerNum < 1 || powerNum > 10) {
+      showError("powerLevel", "Power level must be between 1 and 10.");
+    }
+
+    if (!isValid) return;
+
+    const submitData = {
+      superName,
+      realName,
+      superpower,
+      powerLevel: powerNum,
+      secretIdentity,
+    };
+
+    try {
+      const response = await fetch("/heroes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submitData),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        window.location.href = data.redirectTo || "/heroes";
+      } else {
+        alert("Error: " + (data.message || "Failed to create hero"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to add hero");
+    }
+  });
+
+  document.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", () => {
+      input.classList.remove("is-invalid");
+      const error = input.parentNode.querySelector(".error-message");
+      if (error) error.remove();
+    });
+  });
+});
+
